@@ -7,8 +7,9 @@
 	let canvas
 	let context
 	let isDrawing = false
+	let isErasing = false // New state to track eraser mode
 	const CANVAS_SIZE = 600
-	const PIXEL_SIZE = 20 // 30x30 pixels (600/20)
+	const PIXEL_SIZE = 30 // 30x30 pixels (600/20)
 	
 	onMount(() => {
 		context = canvas.getContext('2d')
@@ -25,7 +26,7 @@
 		
 		if (pixelX >= canvas.width || pixelY >= canvas.height || pixelX < 0 || pixelY < 0) return
 		
-		context.fillStyle = color
+		context.fillStyle = isErasing ? background : color // Use background color when erasing
 		context.fillRect(pixelX, pixelY, PIXEL_SIZE, PIXEL_SIZE)
 	}
 	
@@ -70,7 +71,7 @@
 		link.href = canvas.toDataURL()
 		link.click()
 
-		// 添加对后端的调用
+		// Backend API call example (optional)
 		try {
 			const response = await fetch('/api/process-image', {
 				method: 'POST',
@@ -78,21 +79,26 @@
 					'Content-Type': 'application/json'
 				},
 				body: JSON.stringify({
-					imageData: canvas.toDataURL().split(',')[1], // 移除前缀
+					imageData: canvas.toDataURL().split(',')[1], // Remove prefix
 					timestamp: timestamp
 				})
 			})
 			
 			if (!response.ok) {
-				throw new Error('后端处理失败')
+				throw new Error('Backend processing failed')
 			}
 			
 			const result = await response.json()
-			console.log('Python脚本执行结果:', result)
+			console.log('Python script result:', result)
 		} catch (error) {
-			console.error('调用后端出错:', error)
-			alert('处理图片时出错')
+			console.error('Error calling backend:', error)
+			alert('Error processing the image')
 		}
+	}
+
+	// Toggle between drawing and erasing
+	const toggleEraser = () => {
+		isErasing = !isErasing
 	}
 </script>
 
@@ -108,7 +114,12 @@
 		on:touchmove|preventDefault={handleMove}
 		on:touchend|preventDefault={handleEnd}
 	/>
-	<button class="save-button" on:click={saveImage}>Save Image</button>
+	<div class="controls">
+		<button class="save-button" on:click={saveImage}>Save Image</button>
+		<button class="toggle-eraser-button" on:click={toggleEraser}>
+			{isErasing ? 'Switch to Draw' : 'Switch to Eraser'}
+		</button>
+	</div>
 </div>
 
 <style>
@@ -129,7 +140,12 @@
 		box-shadow: 0 0 20px rgba(0,0,0,0.3);
 	}
 
-	.save-button {
+	.controls {
+		display: flex;
+		gap: 1rem;
+	}
+
+	.save-button, .toggle-eraser-button {
 		padding: 0.5rem 1rem;
 		background: #4CAF50;
 		color: white;
@@ -139,7 +155,15 @@
 		font-size: 1rem;
 	}
 
-	.save-button:hover {
+	.save-button:hover, .toggle-eraser-button:hover {
 		background: #45a049;
+	}
+
+	.toggle-eraser-button {
+		background: #FF5722;
+	}
+
+	.toggle-eraser-button:hover {
+		background: #E64A19;
 	}
 </style>
