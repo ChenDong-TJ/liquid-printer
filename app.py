@@ -2,6 +2,9 @@ from flask import Flask, request, jsonify
 import base64
 import os
 from datetime import datetime
+from gcode import image_to_binary_matrix, optimize_path, generate_gcode
+
+
 
 app = Flask(__name__)
 
@@ -14,22 +17,24 @@ def process_image():
     try:
         # 获取请求数据
         data = request.get_json()
-        image_data = data.get('imageData')
+        image_path = data.get('imagePath')
         timestamp = data.get('timestamp')
 
-        if not image_data or not timestamp:
+        if not image_path or not timestamp:
             return jsonify({"error": "缺少必要参数"}), 400
 
-        # 将 base64 数据解码为二进制数据
-        image_binary = base64.b64decode(image_data)
+        # 直接使用提供的图像路径
+        # 调用 gcode.py 中的函数处理图像并生成 G-code
+        binary_matrix = image_to_binary_matrix(image_path)
+        optimized_path = optimize_path(binary_matrix)
+        gcode_filename = f"{IMAGE_DIR}/gcode-{timestamp}.gcode"
+        generate_gcode(optimized_path, file_name=gcode_filename)
 
-        # 保存图片到文件
-        filename = f"{IMAGE_DIR}/pixel-art-{timestamp}.png"
-        with open(filename, 'wb') as image_file:
-            image_file.write(image_binary)
-
-        # 在这里对图片进行进一步处理（示例：返回文件路径）
-        processed_result = {"message": "图片已处理并保存", "path": filename}
+        # 返回 G-code 文件路径
+        processed_result = {
+            "message": "G-code 已生成并保存",
+            "gcode_path": gcode_filename
+        }
 
         return jsonify(processed_result), 200
 

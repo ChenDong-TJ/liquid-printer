@@ -2,9 +2,9 @@ import { json } from '@sveltejs/kit';
 
 export const POST = async ({ request }) => {
     try {
-        const { imageData, timestamp } = await request.json();
+        const { imagePath, timestamp } = await request.json(); // 修改 imageData 为 imagePath
 
-        if (!imageData || !timestamp) {
+        if (!imagePath || !timestamp) {
             return json({ error: '缺少必要参数' }, { status: 400 });
         }
 
@@ -14,11 +14,13 @@ export const POST = async ({ request }) => {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ imageData, timestamp })
+            body: JSON.stringify({ imagePath, timestamp }) // 修改 imageData 为 imagePath
         });
 
         if (!response.ok) {
-            throw new Error('调用 Python 脚本失败');
+            // 如果响应状态不是 2xx，抛出错误
+            const errorBody = await response.json();
+            throw new Error(errorBody.error || '调用 Python 脚本失败');
         }
 
         const result = await response.json();
