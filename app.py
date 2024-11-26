@@ -1,13 +1,16 @@
-from flask import Flask, request, jsonify
 import base64
-import os
-from datetime import datetime
+from flask import Flask, request, jsonify
+from gcode import image_to_binary_matrix, optimize_path, generate_gcode
+from PIL import Image
+import io
+
+
 
 app = Flask(__name__)
 
-# 创建保存图片的文件夹
+# # 创建保存图片的文件夹
 IMAGE_DIR = "processed_images"
-os.makedirs(IMAGE_DIR, exist_ok=True)
+# os.makedirs(IMAGE_DIR, exist_ok=True)
 
 @app.route('/process-image', methods=['POST'])
 def process_image():
@@ -19,17 +22,27 @@ def process_image():
 
         if not image_data or not timestamp:
             return jsonify({"error": "缺少必要参数"}), 400
+        
 
-        # 将 base64 数据解码为二进制数据
-        image_binary = base64.b64decode(image_data)
+        # 将 base64 编码的图像数据转换为图像文件
+        image_data_bytes = base64.b64decode(image_data)
+        image = Image.open(io.BytesIO(image_data_bytes))
+        image_path = f"processed_images/image-{timestamp}.png"
+        image.save(image_path)
 
-        # 保存图片到文件
-        filename = f"{IMAGE_DIR}/pixel-art-{timestamp}.png"
-        with open(filename, 'wb') as image_file:
-            image_file.write(image_binary)
+        # 直接使用提供的图像路径
+        # 调用 gcode.py 中的函数处理图像并生成 G-code
+        binary_matrix = image_to_binary_matrix(image_path)
+        optimized_path = optimize_path(binary_matrix)
+        gcode_filename = f"gcode-{timestamp}.gcode"
+        generate_gcode(optimized_path, file_name=gcode_filename)
 
-        # 在这里对图片进行进一步处理（示例：返回文件路径）
-        processed_result = {"message": "图片已处理并保存", "path": filename}
+
+        # 返回 G-code 文件路径
+        processed_result = {
+            "message": "G-code 已生成并保存",
+            "gcode_path": gcode_filename
+        }
 
         return jsonify(processed_result), 200
 
