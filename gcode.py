@@ -1,7 +1,7 @@
 from PIL import Image
-from datetime import datetime
 import numpy as np
 import os
+
 
 
 def image_to_binary_matrix(image_path, matrix_size=20, threshold=127):
@@ -17,7 +17,7 @@ def image_to_binary_matrix(image_path, matrix_size=20, threshold=127):
     img = Image.open(image_path)
     print(img.mode)
     img=img.convert('RGB').convert('L')  # 先转换为 RGB，再转换为灰度图,不然透明通道可能有问题
-  # 'L'模式为灰度模式
+    # 'L'模式为灰度模式
     img.show()
     # 调整图像大小为指定的矩阵大小
     # img = img.resize((matrix_size, matrix_size))
