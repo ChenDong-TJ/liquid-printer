@@ -2,19 +2,20 @@ import { json } from '@sveltejs/kit';
 
 export const POST = async ({ request }) => {
     try {
-        const { imagePath, timestamp } = await request.json(); // 修改 imageData 为 imagePath
+        const { imageData, timestamp } = await request.json(); 
 
-        if (!imagePath || !timestamp) {
+        
+        if (!imageData || !timestamp) {
             return json({ error: '缺少必要参数' }, { status: 400 });
         }
 
-        // 调用 Python 脚本处理图片
+        // 调用 Python 脚本处理图片 
         const response = await fetch('http://localhost:5000/process-image', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ imagePath, timestamp }) // 修改 imageData 为 imagePath
+            body: JSON.stringify({ imageData, timestamp }) // 修改 imageData 为 imagePath
         });
 
         if (!response.ok) {

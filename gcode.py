@@ -1,6 +1,7 @@
 from PIL import Image
 from datetime import datetime
 import numpy as np
+import os
 
 
 def image_to_binary_matrix(image_path, matrix_size=20, threshold=127):
@@ -74,11 +75,17 @@ def optimize_path(matrix):
 
     return path
     
-def generate_gcode(optimized_path, spacing=2, extrusion_amount=1, file_name="output.gcode"):
+def generate_gcode(optimized_path, spacing=5, extrusion_amount=100, file_name="output.gcode"):
+    print("received path and generation gcode")
     """
     根据优化后的路径生成 G-code。
     """
-    full_file_path = f"/processed_images/{file_name}"
+    # 确保目录存在
+    directory = "processed_images"
+    os.makedirs(directory, exist_ok=True)
+
+    # 构建完整的文件路径
+    full_file_path = os.path.join(directory, file_name)
     with open(full_file_path, 'w') as f:
         # G-code 初始化
        
@@ -122,30 +129,4 @@ def generate_gcode(optimized_path, spacing=2, extrusion_amount=1, file_name="out
         f.write("G28 X0 Y0 ; 只归零X和Y轴，Z轴不变\n")
         f.write("M84 \n")
         f.write("M30 \n")
-
-
-
-# mat=image_to_binary_matrix("processed_images/test.png",20,200)
-
-
-# row_pattern = [1] * 5 + [0] * 5 + [1] * 5 + [0] * 5
-
-# # 使用列表生成式创建 20x20 的矩阵，每行都重复 row_pattern
-# test_matrix = [row_pattern for _ in range(20)]
-
-# matrix_np = np.array(mat) * 255
-# img = Image.fromarray(matrix_np.astype('uint8'))
-# img.show()
-# # 调用函数生成G-code
-# current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
-# filename=f"dots_output{current_time}.gcode"
-
-# generate_gcode(optimize_path(mat), spacing=5, extrusion_amount=100, file_name=filename)
-
-
-
-# # 打印结果矩阵(debug用)
-# for row in mat:
-#     print(row)
-
 
